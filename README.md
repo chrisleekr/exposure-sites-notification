@@ -1,6 +1,6 @@
 # COVID-19 Exposure Sites Notification Bot for Victoria/Australia
 
-[![Build](https://github.com/chrisleekr/exposure-sites-notification/workflows/main/badge.svg)](https://github.com/chrisleekr/exposure-sites-notification/actions?query=workflow%3Amain)
+[![Build](https://github.com/chrisleekr/exposure-sites-notification/workflows/Push/badge.svg)](https://github.com/chrisleekr/exposure-sites-notification/actions?query=workflow%3APush)
 [![CodeCov](https://codecov.io/gh/chrisleekr/exposure-sites-notification/branch/master/graph/badge.svg)](https://codecov.io/gh/chrisleekr/exposure-sites-notification)
 [![MIT License](https://img.shields.io/github/license/chrisleekr/exposure-sites-notification)](https://github.com/chrisleekr/exposure-sites-notification/blob/master/LICENSE)
 
