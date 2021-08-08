@@ -1,0 +1,105 @@
+{
+  "name": "exposure-sites-notification",
+  "version": "0.0.1",
+  "description": "A Telegram Bot to notify new COVID-19 exposure sites for Victoria, Australia - http://t.me/VICExposureSitesBot",
+  "scripts": {
+    "prepare": "husky install",
+    "start": "node dist/server.js",
+    "dev": "cross-env NODE_ENV=development nodemon app/server.js",
+    "build": "cross-env NODE_ENV=production webpack --config webpack.config.prod.js --progress --profile",
+    "lint": "eslint ./app --fix",
+    "test": "cross-env NODE_ENV=test jest --coverage --detectOpenHandles",
+    "docker:build": "docker build . --build-arg PACKAGE_VERSION=$(node -p \"require('./package.json').version\") --build-arg GIT_HASH=$(git rev-parse --short HEAD) --build-arg NODE_ENV=production --target production-stage -t chrisleekr/exposure-sites-notification:latest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/chrisleekr/exposure-sites-notification.git"
+  },
+  "keywords": [
+    "COVID-19",
+    "Victoria",
+    "Telegram Bot",
+    "Exposure Sites"
+  ],
+  "author": "Chris Lee <git@chrislee.kr>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/chrisleekr/exposure-sites-notification/issues"
+  },
+  "homepage": "https://github.com/chrisleekr/exposure-sites-notification#readme",
+  "dependencies": {
+    "axios": "^0.21.1",
+    "better-sqlite3": "^7.4.3",
+    "bunyan": "^1.8.15",
+    "clean-webpack-plugin": "^3.0.0",
+    "config": "^3.3.6",
+    "cron": "^1.8.2",
+    "cross-env": "^7.0.3",
+    "lodash": "^4.17.21",
+    "lodash-webpack-plugin": "^0.11.6",
+    "moment": "^2.29.1",
+    "node-telegram-bot-api": "^0.54.0",
+    "uuid": "^8.3.2"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.14.5",
+    "@babel/preset-env": "^7.14.7",
+    "@commitlint/cli": "^12.0.1",
+    "@commitlint/config-conventional": "^12.0.1",
+    "@types/jest": "^26.0.24",
+    "@types/node": "^16.3.1",
+    "babel-core": "^6.26.3",
+    "babel-eslint": "^10.1.0",
+    "babel-loader": "^8.2.2",
+    "babel-plugin-lodash": "^3.3.4",
+    "babel-preset-env": "^1.7.0",
+    "branch-name-lint": "^2.1.1",
+    "eslint": "^7.30.0",
+    "eslint-config-airbnb": "^18.2.1",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-flowtype": "^5.8.0",
+    "eslint-plugin-import": "^2.23.4",
+    "eslint-plugin-jest": "^24.3.6",
+    "eslint-plugin-jsx-a11y": "^6.4.1",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-prettier": "^3.4.0",
+    "eslint-plugin-promise": "^5.1.0",
+    "husky": "^7.0.1",
+    "jest": "^27.0.6",
+    "lint-staged": "^11.0.0",
+    "nodemon": "^2.0.11",
+    "prettier": "^2.3.2",
+    "webpack": "^5.44.0",
+    "webpack-cli": "^4.7.2"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "resetMocks": false,
+    "globalSetup": "./jest.setup.js",
+    "collectCoverageFrom": [
+      "app/**/*.js",
+      "!**/node_modules/**",
+      "!**/__tests__/**",
+      "!**/coverage/**"
+    ],
+    "testPathIgnorePatterns": [
+      "/node_modules/"
+    ],
+    "coverageThreshold": {
+      "global": {
+        "branches": 100,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      }
+    }
+  },
+  "lint-staged": {
+    "*.js": [
+      "prettier --write",
+      "npm run lint",
+      "git add -A .",
+      "npm run test"
+    ]
+  }
+}

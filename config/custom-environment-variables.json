@@ -1,0 +1,14 @@
+{
+  "tz": "TZ",
+  "telegram": {
+    "token": "TELEGRAM_TOKEN",
+    "adminChatId": "TELEGRAM_ADMIN_CHAT_ID"
+  },
+  "jobs": {
+    "executeAustraliaVictoria": {
+      "enabled": "JOBS_EXECUTE_AUSTRALIA_VICTORIA_ENABLED",
+      "cronTime": "JOBS_EXECUTE_AUSTRALIA_VICTORIA_CRON_TIME",
+      "dataURL": "JOBS_EXECUTE_AUSTRALIA_VICTORIA_DATA_URL"
+    }
+  }
+}

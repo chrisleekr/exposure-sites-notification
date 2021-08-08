@@ -1,0 +1,31 @@
+version: '3.7'
+
+services:
+  exposure-sites-notification:
+    container_name: exposure-sites-notification
+    build:
+      context: ./
+      target: dev-stage
+      # target: production-stage
+    networks:
+      - internal
+    volumes:
+      - ./config:/srv/config
+      - ./app:/srv/app
+      - database_data:/srv/database
+    env_file:
+      - .env
+    restart: unless-stopped
+    logging:
+      driver: 'json-file'
+      options:
+        max-size: '1G'
+
+networks:
+  internal:
+    driver: bridge
+    # driver_opts:
+    #     com.docker.network.driver.mtu: 1442
+
+volumes:
+  database_data:
