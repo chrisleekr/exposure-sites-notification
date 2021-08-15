@@ -10,8 +10,9 @@ I built this bot to get notified newest exposure sites that are listed by [Depar
 
 I visit the public exposure sites frequently to check whether there was any exposure site that I may be exposed. To reduce the time to access the website to check the sites, I simply built this TelegramBot that notifies me whenever the newest sites are listed.
 
-## Telegram Bot
+## Telegram Channel
 
-[http://t.me/VICExposureSitesBot](http://t.me/VICExposureSitesBot)
+[http://t.me/VICExposureSites](http://t.me/VICExposureSites)
 
-![image](https://user-images.githubusercontent.com/5715919/128624907-cb0da76c-a0c6-4844-bc0b-cd06548b5dec.png)
+![image](https://user-images.githubusercontent.com/5715919/129480878-7670bf1c-5e42-4e7f-a767-ff66cb5771fb.png)
+
