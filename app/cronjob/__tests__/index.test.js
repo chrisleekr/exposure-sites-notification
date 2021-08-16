@@ -12,7 +12,8 @@ describe('index.js', () => {
 
   it('defines expected', () => {
     expect(index).toStrictEqual({
-      executeAustraliaVictoria: expect.any(Function)
+      executeAustraliaVictoria: expect.any(Function),
+      executeAustraliaQueensland: expect.any(Function)
     });
   });
 });

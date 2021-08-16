@@ -1,16 +1,14 @@
 /* eslint-disable global-require */
-describe('executeAustraliaVictoria', () => {
-  let result;
+const moment = require('moment-timezone');
 
+describe('executeAustraliaVictoria', () => {
   let mockConfigGet;
 
   let mockLoggerInfo;
   let mockLoggerError;
 
-  let mockGetSubscribersByRegion;
   let mockGetNotifiedSiteBySubscriberIdAndHash;
   let mockInsertNotifiedSite;
-  let mockUpdateSubscriberLastNotifiedAt;
 
   let mockSendMessage;
 
@@ -21,6 +19,11 @@ describe('executeAustraliaVictoria', () => {
 
     jest.mock('node-telegram-bot-api');
     jest.mock('better-sqlite3');
+
+    jest.useFakeTimers('modern');
+    jest.setSystemTime(
+      moment('2021-08-15 15:31:00').tz('Australia/Melbourne').valueOf()
+    );
 
     mockLoggerInfo = jest.fn();
     mockLoggerError = jest.fn();
@@ -39,10 +42,8 @@ describe('executeAustraliaVictoria', () => {
       get: mockConfigGet
     }));
 
-    mockGetSubscribersByRegion = jest.fn();
     mockGetNotifiedSiteBySubscriberIdAndHash = jest.fn();
     mockInsertNotifiedSite = jest.fn();
-    mockUpdateSubscriberLastNotifiedAt = jest.fn();
 
     mockSendMessage = jest.fn();
 
@@ -55,11 +56,9 @@ describe('executeAustraliaVictoria', () => {
         sendMessage: mockSendMessage
       },
       database: {
-        getSubscribersByRegion: mockGetSubscribersByRegion,
         getNotifiedSiteBySubscriberIdAndHash:
           mockGetNotifiedSiteBySubscriberIdAndHash,
-        insertNotifiedSite: mockInsertNotifiedSite,
-        updateSubscriberLastNotifiedAt: mockUpdateSubscriberLastNotifiedAt
+        insertNotifiedSite: mockInsertNotifiedSite
       }
     }));
 
@@ -70,103 +69,40 @@ describe('executeAustraliaVictoria', () => {
     }));
   });
 
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
   describe('success', () => {
-    describe('when subscriber is never notified', () => {
+    describe('when channel id is configured', () => {
       beforeEach(async () => {
-        mockGetSubscribersByRegion = jest.fn().mockReturnValue([
-          {
-            id: 1,
-            lastNotifiedAt: null
+        mockConfigGet = jest.fn(key => {
+          if (key === 'jobs.executeAustraliaVictoria.dataURL') {
+            return 'https://some.gov.au/some-url';
           }
-        ]);
+          if (key === 'jobs.executeAustraliaVictoria.channelChatId') {
+            return '@channelId';
+          }
+          if (key === 'telegram.adminChatId') {
+            return '987654';
+          }
+          return null;
+        });
 
         mockAxiosGet = jest.fn().mockResolvedValue({
           data: {
             result: {
               records: [
                 {
+                  Suburb: 'Melbourne',
                   Site_title: 'Some site',
                   Site_postcode: '1234',
-                  Exposure_date: '2021-08-08',
-                  Exposure_time: '00:00:00',
+                  Exposure_date: '12/08/2021',
+                  Exposure_time: '15:31:00',
                   Advice_title: 'Tier 1',
                   Advice_instruction: 'Get isolated',
-                  Notes: 'Some note'
-                }
-              ]
-            }
-          }
-        });
-
-        const { logger } = require('../../helpers');
-
-        const {
-          execute: executeAustraliaVictoria
-        } = require('../executeAustraliaVictoria');
-
-        result = await executeAustraliaVictoria(logger);
-      });
-
-      it('triggers axios.get', () => {
-        expect(mockAxiosGet).toHaveBeenCalledWith(
-          'https://some.gov.au/some-url'
-        );
-      });
-
-      it('triggers getSubscribersByRegion', () => {
-        expect(mockGetSubscribersByRegion).toHaveBeenCalledWith(
-          'Australia/Melbourne'
-        );
-      });
-
-      it('triggers insertNotifiedSite', () => {
-        expect(mockInsertNotifiedSite).toHaveBeenCalledWith({
-          subscriberId: 1,
-          hash: '527b0a6e35f4d2ee7ce07fab36ba7ac2'
-        });
-      });
-
-      it('does not trigger getNotifiedSiteBySubscriberIdAndHash', () => {
-        expect(mockGetNotifiedSiteBySubscriberIdAndHash).not.toHaveBeenCalled();
-      });
-
-      it('does not trigger sendMessage', () => {
-        expect(mockSendMessage).not.toHaveBeenCalled();
-      });
-
-      it('triggers updateSubscriberLastNotifiedAt', () => {
-        expect(mockUpdateSubscriberLastNotifiedAt).toHaveBeenCalledWith(
-          1,
-          expect.any(String)
-        );
-      });
-
-      it('returns result', () => {
-        expect(result).toBeTruthy();
-      });
-    });
-
-    describe('when subscriber is already notified before', () => {
-      beforeEach(() => {
-        mockGetSubscribersByRegion = jest.fn().mockReturnValue([
-          {
-            id: 1,
-            lastNotifiedAt: '2021-08-08T00:00:00+00:00:00'
-          }
-        ]);
-
-        mockAxiosGet = jest.fn().mockResolvedValue({
-          data: {
-            result: {
-              records: [
-                {
-                  Site_title: 'Some site',
-                  Site_postcode: '1234',
-                  Exposure_date: '2021-08-08',
-                  Exposure_time: '00:00:00',
-                  Advice_title: 'Tier 1',
-                  Advice_instruction: 'Get isolated',
-                  Notes: 'Some note'
+                  Notes: 'Some note',
+                  Exposure_time_start_24: '15:31:00'
                 }
               ]
             }
@@ -186,56 +122,29 @@ describe('executeAustraliaVictoria', () => {
             execute: executeAustraliaVictoria
           } = require('../executeAustraliaVictoria');
 
-          result = await executeAustraliaVictoria(logger);
+          executeAustraliaVictoria(logger);
+
+          // Fast-forward until all timers have been executed
+          jest.runAllTimers();
         });
 
         it('triggers getNotifiedSiteBySubscriberIdAndHash', () => {
           expect(mockGetNotifiedSiteBySubscriberIdAndHash).toHaveBeenCalledWith(
-            1,
-            '527b0a6e35f4d2ee7ce07fab36ba7ac2'
+            '@channelId',
+            'cd48e63c10f7af1dbe2ddb00caee40fb'
           );
         });
 
         it('triggers sendMessage', () => {
           expect(mockSendMessage).toHaveBeenCalledWith(
-            1,
-            expect.stringContaining('Some site')
+            '@channelId',
+            `<b>Melbourne: Some site</b>\n` +
+              `- Exposure Date/Time: 3 days ago, 12/08/2021 15:31:00\n` +
+              `- Suburb/Postcode: Melbourne 1234\n` +
+              `- Advice: Tier 1\n` +
+              `- Instruction: Get isolated\n` +
+              `- Note: Some note`
           );
-          expect(mockSendMessage).toHaveBeenCalledWith(
-            1,
-            expect.stringContaining('1234')
-          );
-          expect(mockSendMessage).toHaveBeenCalledWith(
-            1,
-            expect.stringContaining('2021-08-08')
-          );
-          expect(mockSendMessage).toHaveBeenCalledWith(
-            1,
-            expect.stringContaining('00:00:00')
-          );
-          expect(mockSendMessage).toHaveBeenCalledWith(
-            1,
-            expect.stringContaining('Tier 1')
-          );
-          expect(mockSendMessage).toHaveBeenCalledWith(
-            1,
-            expect.stringContaining('Get isolated')
-          );
-          expect(mockSendMessage).toHaveBeenCalledWith(
-            1,
-            expect.stringContaining('Some note')
-          );
-        });
-
-        it('triggers updateSubscriberLastNotifiedAt', () => {
-          expect(mockUpdateSubscriberLastNotifiedAt).toHaveBeenCalledWith(
-            1,
-            expect.any(String)
-          );
-        });
-
-        it('returns result', () => {
-          expect(result).toBeTruthy();
         });
       });
 
@@ -243,8 +152,8 @@ describe('executeAustraliaVictoria', () => {
         beforeEach(async () => {
           mockGetNotifiedSiteBySubscriberIdAndHash = jest.fn().mockReturnValue({
             id: 1,
-            subscriberId: 1,
-            hash: '527b0a6e35f4d2ee7ce07fab36ba7ac2'
+            subscriberId: '@channelId',
+            hash: 'cd48e63c10f7af1dbe2ddb00caee40fb'
           });
 
           const { logger } = require('../../helpers');
@@ -253,29 +162,249 @@ describe('executeAustraliaVictoria', () => {
             execute: executeAustraliaVictoria
           } = require('../executeAustraliaVictoria');
 
-          result = await executeAustraliaVictoria(logger);
+          executeAustraliaVictoria(logger);
+          // Fast-forward until all timers have been executed
+          jest.runAllTimers();
         });
 
         it('triggers getNotifiedSiteBySubscriberIdAndHash', () => {
           expect(mockGetNotifiedSiteBySubscriberIdAndHash).toHaveBeenCalledWith(
-            1,
-            '527b0a6e35f4d2ee7ce07fab36ba7ac2'
+            '@channelId',
+            'cd48e63c10f7af1dbe2ddb00caee40fb'
           );
         });
 
         it('does not trigger sendMessage', () => {
           expect(mockSendMessage).not.toHaveBeenCalled();
         });
+      });
+    });
 
-        it('triggers updateSubscriberLastNotifiedAt', () => {
-          expect(mockUpdateSubscriberLastNotifiedAt).toHaveBeenCalledWith(
-            1,
-            expect.any(String)
+    describe('when channel id is not configured', () => {
+      beforeEach(async () => {
+        mockConfigGet = jest.fn(key => {
+          if (key === 'jobs.executeAustraliaVictoria.dataURL') {
+            return 'https://some.gov.au/some-url';
+          }
+          if (key === 'jobs.executeAustraliaVictoria.channelChatId') {
+            return '';
+          }
+          if (key === 'telegram.adminChatId') {
+            return '987654';
+          }
+          return null;
+        });
+
+        mockAxiosGet = jest.fn().mockResolvedValue({
+          data: {
+            result: {
+              records: [
+                {
+                  Suburb: 'Melbourne',
+                  Site_title: 'Some site',
+                  Site_postcode: '1234',
+                  Exposure_date: '12/08/2021',
+                  Exposure_time: '15:31:00',
+                  Advice_title: 'Tier 1',
+                  Advice_instruction: 'Get isolated',
+                  Notes: 'Some note',
+                  Exposure_time_start_24: '15:31:00'
+                }
+              ]
+            }
+          }
+        });
+
+        mockGetNotifiedSiteBySubscriberIdAndHash = jest
+          .fn()
+          .mockReturnValue(undefined);
+
+        const { logger } = require('../../helpers');
+
+        const {
+          execute: executeAustraliaVictoria
+        } = require('../executeAustraliaVictoria');
+
+        executeAustraliaVictoria(logger);
+
+        // Fast-forward until all timers have been executed
+        jest.runAllTimers();
+      });
+
+      it('does not trigger getNotifiedSiteBySubscriberIdAndHash', () => {
+        expect(mockGetNotifiedSiteBySubscriberIdAndHash).not.toHaveBeenCalled();
+      });
+
+      it('does not trigger sendMessage', () => {
+        expect(mockSendMessage).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('when result is invalid', () => {
+      beforeEach(async () => {
+        mockConfigGet = jest.fn(key => {
+          if (key === 'jobs.executeAustraliaVictoria.dataURL') {
+            return 'https://some.gov.au/some-url';
+          }
+          if (key === 'jobs.executeAustraliaVictoria.channelChatId') {
+            return '@channelId';
+          }
+          if (key === 'telegram.adminChatId') {
+            return '987654';
+          }
+          return null;
+        });
+      });
+
+      describe('when site title is not provided', () => {
+        beforeEach(async () => {
+          mockAxiosGet = jest.fn().mockResolvedValue({
+            data: {
+              result: {
+                records: [
+                  {
+                    Suburb: 'Melbourne',
+                    Site_postcode: '1234',
+                    Exposure_date: '12/08/2021',
+                    Exposure_time: '15:31:00',
+                    Advice_title: 'Tier 1',
+                    Advice_instruction: 'Get isolated',
+                    Notes: 'Some note',
+                    Exposure_time_start_24: '15:31:00'
+                  }
+                ]
+              }
+            }
+          });
+
+          mockGetNotifiedSiteBySubscriberIdAndHash = jest
+            .fn()
+            .mockReturnValue(undefined);
+
+          const { logger } = require('../../helpers');
+
+          const {
+            execute: executeAustraliaVictoria
+          } = require('../executeAustraliaVictoria');
+
+          executeAustraliaVictoria(logger);
+          // Fast-forward until all timers have been executed
+          jest.runAllTimers();
+        });
+
+        it('triggers getNotifiedSiteBySubscriberIdAndHash', () => {
+          expect(mockGetNotifiedSiteBySubscriberIdAndHash).toHaveBeenCalledWith(
+            '@channelId',
+            '2f3ebb26e51c02d87ea3ecc54e68cf79'
           );
         });
 
-        it('returns result', () => {
-          expect(result).toBeTruthy();
+        it('does not trigger sendMessage', () => {
+          expect(mockSendMessage).not.toHaveBeenCalled();
+        });
+      });
+
+      describe('when exposure date is not provided', () => {
+        beforeEach(async () => {
+          mockAxiosGet = jest.fn().mockResolvedValue({
+            data: {
+              result: {
+                records: [
+                  {
+                    Suburb: 'Melbourne',
+                    Site_title: 'Some site',
+                    Site_postcode: '1234',
+                    Exposure_time: '15:31:00',
+                    Advice_title: 'Tier 1',
+                    Advice_instruction: 'Get isolated',
+                    Notes: 'Some note',
+                    Exposure_time_start_24: '15:31:00'
+                  }
+                ]
+              }
+            }
+          });
+
+          mockGetNotifiedSiteBySubscriberIdAndHash = jest
+            .fn()
+            .mockReturnValue(undefined);
+
+          const { logger } = require('../../helpers');
+
+          const {
+            execute: executeAustraliaVictoria
+          } = require('../executeAustraliaVictoria');
+
+          executeAustraliaVictoria(logger);
+          // Fast-forward until all timers have been executed
+          jest.runAllTimers();
+        });
+
+        it('triggers getNotifiedSiteBySubscriberIdAndHash', () => {
+          expect(mockGetNotifiedSiteBySubscriberIdAndHash).toHaveBeenCalledWith(
+            '@channelId',
+            '3e4d8a288b57c6456131746280fe2a0b'
+          );
+        });
+
+        it('does not trigger sendMessage', () => {
+          expect(mockSendMessage).not.toHaveBeenCalled();
+        });
+      });
+
+      describe('when suburb is not provided', () => {
+        beforeEach(async () => {
+          mockAxiosGet = jest.fn().mockResolvedValue({
+            data: {
+              result: {
+                records: [
+                  {
+                    Site_title: 'Some site',
+                    Site_postcode: '1234',
+                    Exposure_date: '2021-08-08',
+                    Exposure_time: '15:31:00',
+                    Advice_title: 'Tier 1',
+                    Advice_instruction: 'Get isolated',
+                    Notes: 'Some note',
+                    Exposure_time_start_24: '15:31:00'
+                  }
+                ]
+              }
+            }
+          });
+
+          mockGetNotifiedSiteBySubscriberIdAndHash = jest
+            .fn()
+            .mockReturnValue(undefined);
+
+          const { logger } = require('../../helpers');
+
+          const {
+            execute: executeAustraliaVictoria
+          } = require('../executeAustraliaVictoria');
+
+          executeAustraliaVictoria(logger);
+          // Fast-forward until all timers have been executed
+          jest.runAllTimers();
+        });
+
+        it('triggers getNotifiedSiteBySubscriberIdAndHash', () => {
+          expect(mockGetNotifiedSiteBySubscriberIdAndHash).toHaveBeenCalledWith(
+            '@channelId',
+            '8f797e783edb059045c378f54401d3f2'
+          );
+        });
+
+        it('triggers sendMessage', () => {
+          expect(mockSendMessage).toHaveBeenCalledWith(
+            '@channelId',
+            `<b>Some site</b>\n` +
+              `- Exposure Date/Time: Invalid date, 2021-08-08 15:31:00\n` +
+              `- Suburb/Postcode: N/A 1234\n` +
+              `- Advice: Tier 1\n` +
+              `- Instruction: Get isolated\n` +
+              `- Note: Some note`
+          );
         });
       });
     });
@@ -293,7 +422,10 @@ describe('executeAustraliaVictoria', () => {
         execute: executeAustraliaVictoria
       } = require('../executeAustraliaVictoria');
 
-      result = await executeAustraliaVictoria(logger);
+      executeAustraliaVictoria(logger);
+
+      // Fast-forward until all timers have been executed
+      jest.runAllTimers();
     });
 
     it('triggers error', () => {

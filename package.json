@@ -1,7 +1,7 @@
 {
   "name": "exposure-sites-notification",
   "version": "0.0.2",
-  "description": "A Telegram Bot to notify new COVID-19 exposure sites for Victoria, Australia - http://t.me/VICExposureSitesBot",
+  "description": "A Telegram Bot to notify new COVID-19 exposure sites for Victoria, Australia - http://t.me/VICExposureSites",
   "scripts": {
     "prepare": "husky install",
     "start": "node dist/server.js",
@@ -31,6 +31,7 @@
     "axios": "^0.21.1",
     "better-sqlite3": "^7.4.3",
     "bunyan": "^1.8.15",
+    "cheerio": "^1.0.0-rc.10",
     "clean-webpack-plugin": "^3.0.0",
     "config": "^3.3.6",
     "cron": "^1.8.2",
@@ -38,6 +39,7 @@
     "lodash": "^4.17.21",
     "lodash-webpack-plugin": "^0.11.6",
     "moment": "^2.29.1",
+    "moment-timezone": "^0.5.33",
     "node-telegram-bot-api": "^0.54.0",
     "uuid": "^8.3.2"
   },
@@ -100,8 +102,8 @@
     "*.js": [
       "prettier --write",
       "npm run lint",
-      "git add -A .",
-      "npm run test"
+      "git add",
+      "npm test ."
     ]
   }
 }

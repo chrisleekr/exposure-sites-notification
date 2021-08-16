@@ -22,16 +22,15 @@ bot.onText(/\/start/, (msg, _match) => {
       firstName: _.get(msg, ['from', 'first_name'], ''),
       username: _.get(msg, ['from', 'username'], ''),
       languageCode: _.get(msg, ['from', 'language_code'], ''),
-      region: 'Australia/Melbourne' // Country/City, not timezone
+      region: ''
     });
   } else {
     logger.info({ subscriber }, 'Subscriber already exists in the database.');
   }
 
   const resp =
-    `Welcome. \n\nThe bot will check ` +
-    `https://www.coronavirus.vic.gov.au/exposure-sites and ` +
-    `send you the notification if there are new exposure sites since the last update. `;
+    `Please subscribe a channel for the notification. ` +
+    `Refer https://github.com/chrisleekr/exposure-sites-notification`;
 
   bot.sendMessage(chatId, resp);
 });

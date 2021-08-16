@@ -2,7 +2,10 @@ const { v4: uuidv4 } = require('uuid');
 const config = require('config');
 const { CronJob } = require('cron');
 
-const { executeAustraliaVictoria } = require('./cronjob');
+const {
+  executeAustraliaVictoria,
+  executeAustraliaQueensland
+} = require('./cronjob');
 
 const runCronjob = async serverLogger => {
   const logger = serverLogger.child({ server: 'cronjob' });
@@ -15,6 +18,10 @@ const runCronjob = async serverLogger => {
     {
       jobName: 'executeAustraliaVictoria',
       executeJob: executeAustraliaVictoria
+    },
+    {
+      jobName: 'executeAustraliaQueensland',
+      executeJob: executeAustraliaQueensland
     }
   ].forEach(job => {
     const { jobName, executeJob } = job;
