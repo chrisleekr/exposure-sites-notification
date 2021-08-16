@@ -1,6 +1,6 @@
 {
   "name": "exposure-sites-notification",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "A Telegram Bot to notify new COVID-19 exposure sites for Victoria, Australia - http://t.me/VICExposureSites",
   "scripts": {
     "prepare": "husky install",
