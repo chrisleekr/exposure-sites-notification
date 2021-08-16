@@ -31,6 +31,7 @@
     "axios": "^0.21.1",
     "better-sqlite3": "^7.4.3",
     "bunyan": "^1.8.15",
+    "cheerio": "^1.0.0-rc.10",
     "clean-webpack-plugin": "^3.0.0",
     "config": "^3.3.6",
     "cron": "^1.8.2",

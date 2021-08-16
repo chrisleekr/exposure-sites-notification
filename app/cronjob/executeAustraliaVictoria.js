@@ -6,12 +6,7 @@ const moment = require('moment-timezone');
 
 const { telegram, database } = require('../helpers');
 
-const {
-  getSubscribersByRegion,
-  getNotifiedSiteBySubscriberIdAndHash,
-  insertNotifiedSite,
-  updateSubscriberLastNotifiedAt
-} = database;
+const { getNotifiedSiteBySubscriberIdAndHash, insertNotifiedSite } = database;
 
 const processSite = async (logger, subscriberId, site) => {
   const isNotifiedToSubscriber = getNotifiedSiteBySubscriberIdAndHash(
@@ -63,6 +58,8 @@ const processSite = async (logger, subscriberId, site) => {
         `- Instruction: ${adviceInstruction}\n` +
         `- Note: ${note}`
     );
+
+    await new Promise(resolve => setTimeout(resolve, 3000));
   }
 };
 
@@ -110,41 +107,16 @@ const execute = async logger => {
       'jobs.executeAustraliaVictoria.channelChatId'
     );
     if (channelChatID) {
-      await Promise.all(
-        _.map(sites, async site => processSite(logger, channelChatID, site))
-      );
+      let promise = Promise.resolve();
+      sites.forEach(site => {
+        promise = promise.then(async () => {
+          logger.info({ site }, 'Process site');
+          await processSite(logger, channelChatID, site);
+        });
+      });
+
+      await promise.then(() => logger.info('All sites processed'));
     }
-
-    // Notify to Telegram bot - Subscribers to the Bot
-    const subscribers = getSubscribersByRegion('Australia/Melbourne');
-
-    await Promise.all(
-      _.map(subscribers, async subscriber => {
-        logger.info({ subscriber }, 'Process subscriber');
-
-        await Promise.all(
-          _.map(sites, async site => {
-            if (subscriber.lastNotifiedAt === null) {
-              // Never notified before, to avoid massive notifications, just mark as notified at this point.
-              // Notify only new sites after this tick.
-              logger.info(
-                'Subscriber never be notified before. Mark as notified for this time.'
-              );
-              insertNotifiedSite({
-                subscriberId: subscriber.id,
-                hash: site.hash
-              });
-              return;
-            }
-
-            await processSite(logger, subscriber.id, site);
-          })
-        );
-
-        logger.info('Update subscriber last notified at');
-        updateSubscriberLastNotifiedAt(subscriber.id, moment().format());
-      })
-    );
   } catch (err) {
     logger.error({ err }, 'Error occurred');
     telegram.sendMessage(

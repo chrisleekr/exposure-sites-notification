@@ -1,7 +1,8 @@
 /* eslint-disable global-require */
+const fs = require('fs');
 const moment = require('moment-timezone');
 
-describe('executeAustraliaVictoria', () => {
+describe('executeAustraliaQueensland', () => {
   let mockConfigGet;
 
   let mockLoggerInfo;
@@ -22,14 +23,14 @@ describe('executeAustraliaVictoria', () => {
 
     jest.useFakeTimers('modern');
     jest.setSystemTime(
-      moment('2021-08-15 15:31:00').tz('Australia/Melbourne').valueOf()
+      moment('2021-08-15 15:31:00').tz('Australia/Brisbane').valueOf()
     );
 
     mockLoggerInfo = jest.fn();
     mockLoggerError = jest.fn();
 
     mockConfigGet = jest.fn(key => {
-      if (key === 'jobs.executeAustraliaVictoria.dataURL') {
+      if (key === 'jobs.executeAustraliaQueensland.dataURL') {
         return 'https://some.gov.au/some-url';
       }
       if (key === 'telegram.adminChatId') {
@@ -77,10 +78,10 @@ describe('executeAustraliaVictoria', () => {
     describe('when channel id is configured', () => {
       beforeEach(async () => {
         mockConfigGet = jest.fn(key => {
-          if (key === 'jobs.executeAustraliaVictoria.dataURL') {
+          if (key === 'jobs.executeAustraliaQueensland.dataURL') {
             return 'https://some.gov.au/some-url';
           }
-          if (key === 'jobs.executeAustraliaVictoria.channelChatId') {
+          if (key === 'jobs.executeAustraliaQueensland.channelChatId') {
             return '@channelId';
           }
           if (key === 'telegram.adminChatId') {
@@ -90,23 +91,7 @@ describe('executeAustraliaVictoria', () => {
         });
 
         mockAxiosGet = jest.fn().mockResolvedValue({
-          data: {
-            result: {
-              records: [
-                {
-                  Suburb: 'Melbourne',
-                  Site_title: 'Some site',
-                  Site_postcode: '1234',
-                  Exposure_date: '12/08/2021',
-                  Exposure_time: '15:31:00',
-                  Advice_title: 'Tier 1',
-                  Advice_instruction: 'Get isolated',
-                  Notes: 'Some note',
-                  Exposure_time_start_24: '15:31:00'
-                }
-              ]
-            }
-          }
+          data: fs.readFileSync(`${__dirname}/fixtures/queensland.html`)
         });
       });
 
@@ -119,31 +104,26 @@ describe('executeAustraliaVictoria', () => {
           const { logger } = require('../../helpers');
 
           const {
-            execute: executeAustraliaVictoria
-          } = require('../executeAustraliaVictoria');
+            execute: executeAustraliaQueensland
+          } = require('../executeAustraliaQueensland');
 
-          executeAustraliaVictoria(logger);
-
-          // Fast-forward until all timers have been executed
-          jest.runAllTimers();
+          executeAustraliaQueensland(logger);
         });
 
         it('triggers getNotifiedSiteBySubscriberIdAndHash', () => {
           expect(mockGetNotifiedSiteBySubscriberIdAndHash).toHaveBeenCalledWith(
             '@channelId',
-            'cd48e63c10f7af1dbe2ddb00caee40fb'
+            '1e6b00e04632a515b44bb3443a9d1514'
           );
         });
 
         it('triggers sendMessage', () => {
           expect(mockSendMessage).toHaveBeenCalledWith(
             '@channelId',
-            `<b>Melbourne: Some site</b>\n` +
-              `- Exposure Date/Time: 3 days ago, 12/08/2021 15:31:00\n` +
-              `- Suburb/Postcode: Melbourne 1234\n` +
-              `- Advice: Tier 1\n` +
-              `- Instruction: Get isolated\n` +
-              `- Note: Some note`
+            `<b>Smithfield: Smithfield Shopping Centre</b>\n` +
+              `- Address: Kennedy Hwy &, Captain Cook Hwy\n` +
+              `- Exposure Date/Time: 23 days ago, Friday 23 July 2021 11.10am - 12pm\n` +
+              `- Advice: Low risk`
           );
         });
       });
@@ -153,16 +133,16 @@ describe('executeAustraliaVictoria', () => {
           mockGetNotifiedSiteBySubscriberIdAndHash = jest.fn().mockReturnValue({
             id: 1,
             subscriberId: '@channelId',
-            hash: 'cd48e63c10f7af1dbe2ddb00caee40fb'
+            hash: '55cc1ac1be3b400bda7f53b497e57580'
           });
 
           const { logger } = require('../../helpers');
 
           const {
-            execute: executeAustraliaVictoria
-          } = require('../executeAustraliaVictoria');
+            execute: executeAustraliaQueensland
+          } = require('../executeAustraliaQueensland');
 
-          executeAustraliaVictoria(logger);
+          executeAustraliaQueensland(logger);
           // Fast-forward until all timers have been executed
           jest.runAllTimers();
         });
@@ -170,7 +150,7 @@ describe('executeAustraliaVictoria', () => {
         it('triggers getNotifiedSiteBySubscriberIdAndHash', () => {
           expect(mockGetNotifiedSiteBySubscriberIdAndHash).toHaveBeenCalledWith(
             '@channelId',
-            'cd48e63c10f7af1dbe2ddb00caee40fb'
+            '55cc1ac1be3b400bda7f53b497e57580'
           );
         });
 
@@ -183,10 +163,10 @@ describe('executeAustraliaVictoria', () => {
     describe('when channel id is not configured', () => {
       beforeEach(async () => {
         mockConfigGet = jest.fn(key => {
-          if (key === 'jobs.executeAustraliaVictoria.dataURL') {
+          if (key === 'jobs.executeAustraliaQueensland.dataURL') {
             return 'https://some.gov.au/some-url';
           }
-          if (key === 'jobs.executeAustraliaVictoria.channelChatId') {
+          if (key === 'jobs.executeAustraliaQueensland.channelChatId') {
             return '';
           }
           if (key === 'telegram.adminChatId') {
@@ -196,23 +176,7 @@ describe('executeAustraliaVictoria', () => {
         });
 
         mockAxiosGet = jest.fn().mockResolvedValue({
-          data: {
-            result: {
-              records: [
-                {
-                  Suburb: 'Melbourne',
-                  Site_title: 'Some site',
-                  Site_postcode: '1234',
-                  Exposure_date: '12/08/2021',
-                  Exposure_time: '15:31:00',
-                  Advice_title: 'Tier 1',
-                  Advice_instruction: 'Get isolated',
-                  Notes: 'Some note',
-                  Exposure_time_start_24: '15:31:00'
-                }
-              ]
-            }
-          }
+          data: fs.readFileSync(`${__dirname}/fixtures/queensland.html`)
         });
 
         mockGetNotifiedSiteBySubscriberIdAndHash = jest
@@ -222,10 +186,10 @@ describe('executeAustraliaVictoria', () => {
         const { logger } = require('../../helpers');
 
         const {
-          execute: executeAustraliaVictoria
-        } = require('../executeAustraliaVictoria');
+          execute: executeAustraliaQueensland
+        } = require('../executeAustraliaQueensland');
 
-        executeAustraliaVictoria(logger);
+        executeAustraliaQueensland(logger);
 
         // Fast-forward until all timers have been executed
         jest.runAllTimers();
@@ -243,10 +207,10 @@ describe('executeAustraliaVictoria', () => {
     describe('when result is invalid', () => {
       beforeEach(async () => {
         mockConfigGet = jest.fn(key => {
-          if (key === 'jobs.executeAustraliaVictoria.dataURL') {
+          if (key === 'jobs.executeAustraliaQueensland.dataURL') {
             return 'https://some.gov.au/some-url';
           }
-          if (key === 'jobs.executeAustraliaVictoria.channelChatId') {
+          if (key === 'jobs.executeAustraliaQueensland.channelChatId') {
             return '@channelId';
           }
           if (key === 'telegram.adminChatId') {
@@ -256,25 +220,12 @@ describe('executeAustraliaVictoria', () => {
         });
       });
 
-      describe('when site title is not provided', () => {
+      describe('when location is not provided', () => {
         beforeEach(async () => {
           mockAxiosGet = jest.fn().mockResolvedValue({
-            data: {
-              result: {
-                records: [
-                  {
-                    Suburb: 'Melbourne',
-                    Site_postcode: '1234',
-                    Exposure_date: '12/08/2021',
-                    Exposure_time: '15:31:00',
-                    Advice_title: 'Tier 1',
-                    Advice_instruction: 'Get isolated',
-                    Notes: 'Some note',
-                    Exposure_time_start_24: '15:31:00'
-                  }
-                ]
-              }
-            }
+            data: fs.readFileSync(
+              `${__dirname}/fixtures/queensland-invalid-location.html`
+            )
           });
 
           mockGetNotifiedSiteBySubscriberIdAndHash = jest
@@ -284,10 +235,10 @@ describe('executeAustraliaVictoria', () => {
           const { logger } = require('../../helpers');
 
           const {
-            execute: executeAustraliaVictoria
-          } = require('../executeAustraliaVictoria');
+            execute: executeAustraliaQueensland
+          } = require('../executeAustraliaQueensland');
 
-          executeAustraliaVictoria(logger);
+          executeAustraliaQueensland(logger);
           // Fast-forward until all timers have been executed
           jest.runAllTimers();
         });
@@ -295,7 +246,7 @@ describe('executeAustraliaVictoria', () => {
         it('triggers getNotifiedSiteBySubscriberIdAndHash', () => {
           expect(mockGetNotifiedSiteBySubscriberIdAndHash).toHaveBeenCalledWith(
             '@channelId',
-            '2f3ebb26e51c02d87ea3ecc54e68cf79'
+            '98a324d29d6bc40b60fdcdac488a967e'
           );
         });
 
@@ -304,25 +255,12 @@ describe('executeAustraliaVictoria', () => {
         });
       });
 
-      describe('when exposure date is not provided', () => {
+      describe('when date is not provided', () => {
         beforeEach(async () => {
           mockAxiosGet = jest.fn().mockResolvedValue({
-            data: {
-              result: {
-                records: [
-                  {
-                    Suburb: 'Melbourne',
-                    Site_title: 'Some site',
-                    Site_postcode: '1234',
-                    Exposure_time: '15:31:00',
-                    Advice_title: 'Tier 1',
-                    Advice_instruction: 'Get isolated',
-                    Notes: 'Some note',
-                    Exposure_time_start_24: '15:31:00'
-                  }
-                ]
-              }
-            }
+            data: fs.readFileSync(
+              `${__dirname}/fixtures/queensland-invalid-date.html`
+            )
           });
 
           mockGetNotifiedSiteBySubscriberIdAndHash = jest
@@ -332,10 +270,10 @@ describe('executeAustraliaVictoria', () => {
           const { logger } = require('../../helpers');
 
           const {
-            execute: executeAustraliaVictoria
-          } = require('../executeAustraliaVictoria');
+            execute: executeAustraliaQueensland
+          } = require('../executeAustraliaQueensland');
 
-          executeAustraliaVictoria(logger);
+          executeAustraliaQueensland(logger);
           // Fast-forward until all timers have been executed
           jest.runAllTimers();
         });
@@ -343,7 +281,7 @@ describe('executeAustraliaVictoria', () => {
         it('triggers getNotifiedSiteBySubscriberIdAndHash', () => {
           expect(mockGetNotifiedSiteBySubscriberIdAndHash).toHaveBeenCalledWith(
             '@channelId',
-            '3e4d8a288b57c6456131746280fe2a0b'
+            '547b5b4b708d9e7142b6a298e0d8dbff'
           );
         });
 
@@ -355,22 +293,9 @@ describe('executeAustraliaVictoria', () => {
       describe('when suburb is not provided', () => {
         beforeEach(async () => {
           mockAxiosGet = jest.fn().mockResolvedValue({
-            data: {
-              result: {
-                records: [
-                  {
-                    Site_title: 'Some site',
-                    Site_postcode: '1234',
-                    Exposure_date: '2021-08-08',
-                    Exposure_time: '15:31:00',
-                    Advice_title: 'Tier 1',
-                    Advice_instruction: 'Get isolated',
-                    Notes: 'Some note',
-                    Exposure_time_start_24: '15:31:00'
-                  }
-                ]
-              }
-            }
+            data: fs.readFileSync(
+              `${__dirname}/fixtures/queensland-invalid-suburb.html`
+            )
           });
 
           mockGetNotifiedSiteBySubscriberIdAndHash = jest
@@ -380,10 +305,10 @@ describe('executeAustraliaVictoria', () => {
           const { logger } = require('../../helpers');
 
           const {
-            execute: executeAustraliaVictoria
-          } = require('../executeAustraliaVictoria');
+            execute: executeAustraliaQueensland
+          } = require('../executeAustraliaQueensland');
 
-          executeAustraliaVictoria(logger);
+          executeAustraliaQueensland(logger);
           // Fast-forward until all timers have been executed
           jest.runAllTimers();
         });
@@ -391,19 +316,17 @@ describe('executeAustraliaVictoria', () => {
         it('triggers getNotifiedSiteBySubscriberIdAndHash', () => {
           expect(mockGetNotifiedSiteBySubscriberIdAndHash).toHaveBeenCalledWith(
             '@channelId',
-            '8f797e783edb059045c378f54401d3f2'
+            '0049c359d32dad994040144d899968c8'
           );
         });
 
         it('triggers sendMessage', () => {
           expect(mockSendMessage).toHaveBeenCalledWith(
             '@channelId',
-            `<b>Some site</b>\n` +
-              `- Exposure Date/Time: Invalid date, 2021-08-08 15:31:00\n` +
-              `- Suburb/Postcode: N/A 1234\n` +
-              `- Advice: Tier 1\n` +
-              `- Instruction: Get isolated\n` +
-              `- Note: Some note`
+            `<b>Bluewater Village Early Learning</b>\n` +
+              `- Address: 1 Maritime Way\n` +
+              `- Exposure Date/Time: 23 days ago, Friday 23 July 2021 8.30am - 8.45am\n` +
+              `- Advice: Low risk`
           );
         });
       });
@@ -419,10 +342,10 @@ describe('executeAustraliaVictoria', () => {
       const { logger } = require('../../helpers');
 
       const {
-        execute: executeAustraliaVictoria
-      } = require('../executeAustraliaVictoria');
+        execute: executeAustraliaQueensland
+      } = require('../executeAustraliaQueensland');
 
-      executeAustraliaVictoria(logger);
+      executeAustraliaQueensland(logger);
 
       // Fast-forward until all timers have been executed
       jest.runAllTimers();

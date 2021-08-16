@@ -62,7 +62,7 @@ describe('telegram', () => {
           firstName: 'Chris',
           username: '123456',
           languageCode: 'en',
-          region: 'Australia/Melbourne' // Country/City, not timezone
+          region: '' // Country/City, not timezone
         });
       });
 
@@ -98,7 +98,7 @@ describe('telegram', () => {
           firstName: 'Chris',
           username: '123456',
           languageCode: 'en',
-          region: 'Australia/Melbourne' // Country/City, not timezone
+          region: '' // Country/City, not timezone
         });
       });
 
@@ -130,7 +130,7 @@ describe('telegram', () => {
           firstName: '',
           username: '',
           languageCode: '',
-          region: 'Australia/Melbourne' // Country/City, not timezone
+          region: '' // Country/City, not timezone
         });
       });
 
@@ -150,7 +150,7 @@ describe('telegram', () => {
           firstName: 'Chris1',
           username: '123457',
           languageCode: 'en',
-          region: 'Australia/Melbourne'
+          region: ''
         });
 
         telegramMsg = {
@@ -176,7 +176,7 @@ describe('telegram', () => {
           firstName: 'Chris1',
           username: '123457',
           languageCode: 'en',
-          region: 'Australia/Melbourne'
+          region: ''
         });
       });
 
